@@ -12,6 +12,7 @@ if not exist "%BACKUP_ROOT%" mkdir "%BACKUP_ROOT%" >nul 2>&1
 set "LOG_FILE=%BACKUP_ROOT%\internet_optimizer.log"
 
 call :RequireAdmin
+if errorlevel 1 exit /b
 
 :Menu
 cls
@@ -182,7 +183,7 @@ net session >nul 2>&1
 if "%ERRORLEVEL%"=="0" exit /b 0
 echo Requesting Windows administrator authentication...
 powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
-exit /b
+exit /b 1
 
 :BackupState
 echo.
