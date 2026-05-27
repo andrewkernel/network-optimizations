@@ -11,8 +11,8 @@ if not exist "%USERPROFILE%\Desktop" set "BACKUP_ROOT=%USERPROFILE%\Documents\In
 if not exist "%BACKUP_ROOT%" mkdir "%BACKUP_ROOT%" >nul 2>&1
 set "LOG_FILE=%BACKUP_ROOT%\internet_optimizer.log"
 
-call :RequireAdmin
-if errorlevel 1 exit /b
+call :RequireAdmin "%~1"
+if errorlevel 1 exit /b %ERRORLEVEL%
 
 :Menu
 cls
@@ -179,11 +179,28 @@ pause
 goto Menu
 
 :RequireAdmin
-net session >nul 2>&1
+call :IsAdmin
 if "%ERRORLEVEL%"=="0" exit /b 0
+if /i "%~1"=="--elevated" (
+    echo.
+    echo Administrator authentication did not grant this window elevated rights.
+    echo The script will not relaunch again.
+    echo.
+    echo Right-click this file and choose "Run as administrator", or check Windows UAC policy.
+    pause
+    exit /b 1
+)
 echo Requesting Windows administrator authentication...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
+set "SCRIPT_PATH=%~f0"
+set "SCRIPT_DIR=%~dp0"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath $env:SCRIPT_PATH -ArgumentList '--elevated' -WorkingDirectory $env:SCRIPT_DIR -Verb RunAs"
 exit /b 1
+
+:IsAdmin
+fltmc >nul 2>&1
+if "%ERRORLEVEL%"=="0" exit /b 0
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent()); if ($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { exit 0 } exit 1" >nul 2>&1
+exit /b %ERRORLEVEL%
 
 :BackupState
 echo.
