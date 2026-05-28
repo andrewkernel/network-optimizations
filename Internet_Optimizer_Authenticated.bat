@@ -203,8 +203,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "$principal = New-Object 
 exit /b %ERRORLEVEL%
 
 :BackupState
-echo.
-echo Creating backup and restore point where available...
 if not exist "%BACKUP_ROOT%" mkdir "%BACKUP_ROOT%" >nul 2>&1
 call :Run powershell -NoProfile -ExecutionPolicy Bypass -Command "Checkpoint-Computer -Description 'Before Internet Optimizer' -RestorePointType 'MODIFY_SETTINGS' -ErrorAction Stop"
 call :Run reg export "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" "%BACKUP_ROOT%\Tcpip_Parameters.reg" /y
@@ -215,25 +213,18 @@ call :Run ipconfig /all
 exit /b 0
 
 :Run
-echo.
-echo ^> %*
 >>"%LOG_FILE%" echo.
 >>"%LOG_FILE%" echo [%DATE% %TIME%] ^> %*
 %* >>"%LOG_FILE%" 2>&1
 set "RC=%ERRORLEVEL%"
 if not "%RC%"=="0" (
-    echo Command returned %RC%. Details were written to the log.
     >>"%LOG_FILE%" echo Command returned %RC%.
-) else (
-    echo OK
 )
 exit /b %RC%
 
 :Header
 echo Authenticated Internet Optimizer
 echo Running as: %USERDOMAIN%\%USERNAME%
-echo Backup folder: "%BACKUP_ROOT%"
-echo Log file: "%LOG_FILE%"
 exit /b 0
 
 :End
